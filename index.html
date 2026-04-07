@@ -106,7 +106,7 @@
                 labelContainer.childNodes[i].innerHTML = classPrediction;
             }
 
-            if (topClass.className === "Go" && topClass.probability > 0.6) {
+            if (topClass.className === "Go" && topClass.probability > 0.35) {
                 document.body.style.backgroundColor = "limegreen";
             } else if (topClass.className === "Stop" && topClass.probability > 0.6) {
                 document.body.style.backgroundColor = "firebrick"; // red
