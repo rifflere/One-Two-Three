@@ -46,6 +46,7 @@
     <div id="label-container"></div>
 
     <div id="message"></div>
+    <div id="box">BOX</div>
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
@@ -128,6 +129,14 @@
                 messageEl.textContent = "🛑";
             } else {
                 messageEl.textContent = "";
+            }
+
+            // Move element
+            const box = document.getElementById("box");
+            if (topClass.className === "Go" && topClass.probability > 0.35) {
+                box.style.transform = "translateX(100px)";
+            } else {
+                box.style.transform = "translateX(0)";
             }
         }
 
