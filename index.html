@@ -105,6 +105,19 @@
                     prediction[i].className + ": " + prediction[i].probability.toFixed(2);
                 labelContainer.childNodes[i].innerHTML = classPrediction;
             }
+
+            if (topClass.className === "One" && topClass.probability > 0.8) {
+                document.body.style.backgroundColor = "bisque"; // green
+            } else if (topClass.className === "Two" && topClass.probability > 0.8) {
+                document.body.style.backgroundColor = "coral"; // red
+            } else if (topClass.className === "Three" && topClass.probability > 0.8) {
+                document.body.style.backgroundColor = "darkred"; // blue
+            } else if (topClass.className === "Nothing" && topClass.probability > 0.8) {
+                document.body.style.backgroundColor = "gainsboro"; // yellow
+            }
+            else {
+                document.body.style.backgroundColor = "white";
+            }
         }
 
         async function toggleCamera() {
