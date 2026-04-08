@@ -50,7 +50,7 @@
     <div id="label-container"></div>
 
     <div id="message"></div>
-    <div id="box">BOX</div>
+    <div id="box"`>📦</div>
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
@@ -65,10 +65,20 @@
         const now = Date.now();
 
         const requiredTime = 3000; //required time to hold the gesture in ms
+
+        const MAX_LOCATION = (window.innerWidth/2) - 50; // max location of the box to win (half the screen minus the box width)
+        const MIN_LOCATION = 0;
+        const boxLocation = MAX_LOCATION - 20; // location of the box to win
+        const variation = 20; // how much the box can vary from the exact location to win
         let lastGoTime = 0;
         let currentlocation = 0;
         let gameState = true;
 
+        const box = document.getElementById("box");
+        // box.textContent = window.innerWidth;
+        box.style.position = "absolute";
+        box.style.left = boxLocation;
+        
         async function init() {
             model = await tmImage.load(URL + "model.json", URL + "metadata.json");
             maxPredictions = model.getTotalClasses();
@@ -173,13 +183,13 @@
                     currentlocation += 100;
                     box.style.transform = "translateX(currentlocation)";
                 } else if (prediction === "Nothing") {
-                    currentlocation = -50;
+                    currentlocation -= 50;
                     box.style.transform = "translateX(currentlocation)";
                 } else if (prediction === "Stop") {
                     if (currentlocation == boxlocation) {
                         gameState = false;
-                        
                         // display a win message
+                        messageEl.textContent = "You win! 🎉";
                     }
                 }
             } 
