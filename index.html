@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GO ✊✋</title>
+    <title>GO 👉👉✋</title>
     <style>
         body {
             font-family: sans-serif;
@@ -35,14 +35,81 @@
         }
         button.stop { background: #dc2626; }
         button:hover { opacity: 0.9; }
+
+                /* Game track */
+        #game-track {
+            position: relative;
+            width: 100%;
+            height: 80px;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            overflow: visible;
+        }
+
+        /* The box / goal zone */
+        #box {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2rem;
+            line-height: 1;
+            padding: 6px 10px;
+            border-radius: 10px;
+            border: 3px solid #94a3b8;
+            background: #e2e8f0;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        #box.in-range {
+            border-color: #f59e0b;
+            background: #fef3c7;
+        }
+        #box.winning {
+            border-color: #22c55e;
+            background: #dcfce7;
+        }
+
+        /* Timer bar inside the box zone */
+        #timer-bar-container {
+            position: absolute;
+            bottom: -18px;
+            left: 0;
+            width: 100%;
+            height: 8px;
+            background: #cbd5e1;
+            border-radius: 4px;
+            overflow: hidden;
+            display: none;
+        }
+        #timer-bar {
+            height: 100%;
+            width: 0%;
+            background: #f59e0b;
+            border-radius: 4px;
+            transition: width 0.1s linear, background 0.2s;
+        }
+        #timer-bar.winning {
+            background: #22c55e;
+        }
+
+        /* Player */
+        #player {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%) translateX(0px);
+            font-size: 2rem;
+            line-height: 1;
+            transition: transform 0.05s linear;
+            left: 0;
+        }
     </style>
 </head>
 <body>
-    <h1>GO</h1>
+    <h1>GO 👉👉✋</h1>
     <p><bold>Instructions</bold></p>
     <p>1. Click "Start Camera" and allow access to your webcam.</p>
-    <p>2. Show the "Go" gesture to turn the background green and move the box. 👉</p>
-    <p>3. Show the "Stop" gesture to turn the background red and stop the box. ✋</p>
+    <p>2. Show the <strong>Go</strong> gesture 👉 to move the player right.</p>
+    <p>3. Show the <strong>Nothing</strong> gesture to drift back.</p>
+    <p>4. Reach the 📦 and show <strong>Stop</strong> ✋ — hold it for 3 seconds to win!</p>
 
     <button id="toggleButton" onclick="toggleCamera()">Start Camera</button>
 
@@ -50,8 +117,16 @@
     <div id="label-container"></div>
 
     <div id="message"></div>
-    <div id="player">🚶‍➡</div>
-    <div id="box"`>📦</div>
+
+    <div id="game-track">
+        <div id="player">🚶‍➡️</div>
+        <div id="box">
+            📦
+            <div id="timer-bar-container">
+                <div id="timer-bar"></div>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
@@ -63,27 +138,38 @@
         let isRunning = false;
 
         // GAME VARIABLES
-        const now = Date.now();
-
         const requiredTime = 3000; //required time to hold the gesture in ms
+        const variation = 50; // how much the box can vary from the exact location to win
+        
+        let trackWidth, boxLeft, MAX_LOCATION, MIN_LOCATION;
 
-        const MAX_LOCATION = (window.innerWidth/2) - 25; // max location of the box to win (half the screen minus the box width)
-        const MIN_LOCATION = 0;
-        const boxLocation = window.innerWidth - (window.innerWidth/10); // location of the box to win
         const player = {
             location: 0,
             speed: 5,
             element: document.getElementById("player") // you'll need to add this to HTML
         };
-        const variation = 50; // how much the box can vary from the exact location to win
-        let lastGoTime = 0;
 
-        const box = document.getElementById("box");
-        // box.textContent = window.innerWidth;
-        box.style.position = "absolute";
-        box.style.left = boxLocation + "px";
-        
+        let lastGoTime = 0;
+        let gameWon = false;
+
+        const boxEl       = document.getElementById("box");
+        const timerBarContainer = document.getElementById("timer-bar-container");
+        const timerBar    = document.getElementById("timer-bar");
+        const messageEl   = document.getElementById("message");
+        const trackEl     = document.getElementById("game-track");
+
+        function setupGame() {
+            trackWidth   = trackEl.offsetWidth;
+            boxLeft      = trackWidth - 60;   // ~60px from right edge of track
+            MAX_LOCATION = window.innerWidth - 80;   // player's rightmost allowed position
+            MIN_LOCATION = 0;
+
+            boxEl.style.left = boxLeft + "px";
+        }
+     
         async function init() {
+            setupGame();
+
             model = await tmImage.load(URL + "model.json", URL + "metadata.json");
             maxPredictions = model.getTotalClasses();
 
@@ -103,6 +189,9 @@
             }
 
             isRunning = true;
+            gameWon = false;
+            player.location = 0;
+            lastGoTime = 0;
             window.requestAnimationFrame(loop);
         }
 
@@ -114,6 +203,8 @@
         }
 
         async function predict() {
+            if (gameWon) return;
+
             const prediction = await model.predict(webcam.canvas);
 
             // Find the class with the highest probability
@@ -136,35 +227,16 @@
             }
 
             // Change background color based on the top prediction
-            if (topClass.className === "Go" && topClass.probability > 0.35) {
+            if (topClass.className === "Go") {
                 document.body.style.backgroundColor = "limegreen";
-            } else if (topClass.className === "Stop" && topClass.probability > 0.6) {
+            } else if (topClass.className === "Stop") {
                 document.body.style.backgroundColor = "firebrick"; // red
-            } else if (topClass.className === "Nothing" && topClass.probability > 0.6) {
+            } else if (topClass.className === "Nothing") {
                 document.body.style.backgroundColor = "gainsboro"; // gray
             } 
             else {
                 document.body.style.backgroundColor = "white";
-            }
-
-            // Change message based on the top prediction
-            // const messageEl = document.getElementById("message");
-            // if (topClass.className === "Go" && topClass.probability > 0.35) {
-            //     messageEl.textContent = "🚶‍➡";
-            // } else if (topClass.className === "Stop" && topClass.probability > 0.6) {
-            //     messageEl.textContent = "🛑";
-            // } else {
-            //     messageEl.textContent = "";
-            // }
-
-            // // Move element
-            // const box = document.getElementById("box");
-            // if (topClass.className === "Go" && topClass.probability > 0.35) {
-            //     box.style.transform = "translateX(100px)";
-            // } else {
-            //     box.style.transform = "translateX(0)";
-            // }
-            
+            }   
 
             game(topClass.className);
         }
@@ -185,30 +257,62 @@
         }
 
         async function game(prediction) {
+
+            // Move player
+            if (prediction === "Go") {
+                player.location = Math.min(player.location + player.speed, MAX_LOCATION);
+            } else if (prediction === "Nothing") {
+                player.location = Math.max(player.location - 2, MIN_LOCATION);
+            }
+
+            // Apply position
+            player.element.style.transform = `translateY(-50%) translateX(${player.location}px)`;
+
             const atBox = Math.abs(player.location - boxLocation) <= variation;
 
-            if (prediction === "Go" ) {
-                player.location += player.location < MAX_LOCATION ? player.speed : 0; // only move forward if not at the right edge
-                player.element.style.transform = "translateX(" + player.location + "px)";
-            } else if (prediction === "Nothing") {
-                player.location -= player.location > MIN_LOCATION ? player.speed : 0; // only move back if not at the left edge
-                player.element.style.transform = "translateX(" + player.location + "px)";
-            } else if (prediction === "Stop") {
-                if (atBox) {
-                    if (lastGoTime === 0) lastGoTime = Date.now();
-                        const heldFor = Date.now() - lastGoTime;
-                        const secondsLeft = Math.ceil((requiredTime - heldFor) / 1000);
-                        document.getElementById("message").textContent = `Hold it! ${secondsLeft}s...`;
+            if (atBox) {
+                boxEl.classList.add("in-range");
 
-                        if (heldFor >= requiredTime) {
-                            document.getElementById("message").textContent = "You win! 🎉";
-                            isRunning = false; // stop the game loop
-                        }
+                if (className === "Stop" && probability > 0.6) {
+                    // Start or continue the hold timer
+                    if (lastGoTime === 0) lastGoTime = Date.now();
+
+                    const heldFor   = Date.now() - lastGoTime;
+                    const progress  = Math.min(heldFor / requiredTime, 1);
+                    const secondsLeft = Math.ceil((requiredTime - heldFor) / 1000);
+
+                    // Show timer bar
+                    timerBarContainer.style.display = "block";
+                    timerBar.style.width = (progress * 100) + "%";
+
+                    if (progress >= 1) {
+                        timerBar.classList.add("winning");
+                        boxEl.classList.remove("in-range");
+                        boxEl.classList.add("winning");
+                        messageEl.textContent = "You win! 🎉";
+                        gameWon = true;
+                        isRunning = false;
                     } else {
-                        lastGoTime = 0; // reset timer if they leave
+                        messageEl.textContent = `Hold it! ${secondsLeft}s...`;
                     }
+                } else {
+                    // At the box but not stopping — reset timer
+                    lastGoTime = 0;
+                    timerBarContainer.style.display = "none";
+                    timerBar.style.width = "0%";
+                    timerBar.classList.remove("winning");
+                    messageEl.textContent = "📦 Now stop! ✋";
                 }
+            } else {
+                // Not at box — reset everything
+                boxEl.classList.remove("in-range", "winning");
+                timerBarContainer.style.display = "none";
+                timerBar.style.width = "0%";
+                timerBar.classList.remove("winning");
+                lastGoTime = 0;
+                messageEl.textContent = "";
             }
+        }
     </script>
 </body>
 </html>
