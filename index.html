@@ -128,7 +128,7 @@
             // Change message based on the top prediction
             const messageEl = document.getElementById("message");
             if (topClass.className === "Go" && topClass.probability > 0.35) {
-                messageEl.textContent = "🚶‍♂️";
+                messageEl.textContent = "🚶‍➡";
             } else if (topClass.className === "Stop" && topClass.probability > 0.6) {
                 messageEl.textContent = "🛑";
             } else {
