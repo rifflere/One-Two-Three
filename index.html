@@ -75,9 +75,8 @@
             speed: 5,
             element: document.getElementById("player") // you'll need to add this to HTML
         };
-        const variation = 20; // how much the box can vary from the exact location to win
+        const variation = 50; // how much the box can vary from the exact location to win
         let lastGoTime = 0;
-        let gameState = true;
 
         const box = document.getElementById("box");
         // box.textContent = window.innerWidth;
@@ -166,9 +165,8 @@
             //     box.style.transform = "translateX(0)";
             // }
             
-            if (gameState) {
-                game(topClass.className);
-            }
+
+            game(topClass.className);
         }
 
         async function toggleCamera() {
@@ -187,6 +185,8 @@
         }
 
         async function game(prediction) {
+            const atBox = Math.abs(player.location - boxLocation) <= variation;
+
             if (prediction === "Go" ) {
                 player.location += player.location < MAX_LOCATION ? player.speed : 0; // only move forward if not at the right edge
                 player.element.style.transform = "translateX(" + player.location + "px)";
@@ -194,14 +194,21 @@
                 player.location -= player.location > MIN_LOCATION ? player.speed : 0; // only move back if not at the left edge
                 player.element.style.transform = "translateX(" + player.location + "px)";
             } else if (prediction === "Stop") {
-                if (player.location == boxlocation) {
-                    gameState = false;
-                    // display a win message
-                    const messageEl = document.getElementById("message");
-                    messageEl.textContent = "You win! 🎉";
+                if (atBox) {
+                    if (lastGoTime === 0) lastGoTime = Date.now();
+                        const heldFor = Date.now() - lastGoTime;
+                        const secondsLeft = Math.ceil((requiredTime - heldFor) / 1000);
+                        document.getElementById("message").textContent = `Hold it! ${secondsLeft}s...`;
+
+                        if (heldFor >= requiredTime) {
+                            document.getElementById("message").textContent = "You win! 🎉";
+                            isRunning = false; // stop the game loop
+                        }
+                    } else {
+                        lastGoTime = 0; // reset timer if they leave
+                    }
                 }
             }
-        }
     </script>
 </body>
 </html>
