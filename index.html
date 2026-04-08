@@ -113,10 +113,12 @@
 <body>
     <h1>GO 👉👉✋</h1>
     <p><bold>Instructions</bold></p>
-    <p>1. Click "Start Camera" and allow access to your webcam.</p>
-    <p>2. Show the <strong>Go</strong> gesture 👉 to move the player right.</p>
-    <p>3. Do <strong>Nothing</strong> to drift back.</p>
-    <p>4. Reach the 📦 and show <strong>Stop</strong> ✋ — hold it for 3 seconds to win!</p>
+    <ol style="text-align:left; display:inline-block; margin-top:0;">
+    <li>Click "Start Camera" and allow access to your webcam.</li>
+    <li>Show the <strong>Go</strong> gesture 👉 to move the player right.</li>
+    <li>Do <strong>Nothing</strong> to drift back.</li>
+    <li>Reach the 📦 and show <strong>Stop</strong> ✋ — hold it for 3 seconds to win!</li>
+    </ol>
 
     <button id="toggleButton" onclick="toggleCamera()">Start Camera</button>
     <button id="restartButton" onclick="restart()" style="display:none; background:#16a34a;">Restart Game</button>
@@ -228,11 +230,11 @@
             console.log(topClass.className, topClass.probability);
 
             // Update the display
-            for (let i = 0; i < maxPredictions; i++) {
-                const classPrediction =
-                    prediction[i].className + ": " + prediction[i].probability.toFixed(2);
-                labelContainer.childNodes[i].innerHTML = classPrediction;
-            }
+            // for (let i = 0; i < maxPredictions; i++) {
+            //     const classPrediction =
+            //         prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+            //     labelContainer.childNodes[i].innerHTML = classPrediction;
+            // }
 
             // Change background color based on the top prediction
             if (topClass.className === "Go") {
