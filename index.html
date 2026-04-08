@@ -61,6 +61,14 @@
         let model, webcam, labelContainer, maxPredictions;
         let isRunning = false;
 
+        // GAME VARIABLES
+        const now = Date.now();
+
+        const requiredTime = 3000; //required time to hold the gesture in ms
+        let lastGoTime = 0;
+        let currentlocation = 0;
+        let gameState = true;
+
         async function init() {
             model = await tmImage.load(URL + "model.json", URL + "metadata.json");
             maxPredictions = model.getTotalClasses();
@@ -135,13 +143,13 @@
                 messageEl.textContent = "";
             }
 
-            // Move element
-            const box = document.getElementById("box");
-            if (topClass.className === "Go" && topClass.probability > 0.35) {
-                box.style.transform = "translateX(100px)";
-            } else {
-                box.style.transform = "translateX(0)";
-            }
+            // // Move element
+            // const box = document.getElementById("box");
+            // if (topClass.className === "Go" && topClass.probability > 0.35) {
+            //     box.style.transform = "translateX(100px)";
+            // } else {
+            //     box.style.transform = "translateX(0)";
+            // }
         }
 
         async function toggleCamera() {
@@ -157,6 +165,26 @@
                 button.textContent = "Start Camera";
                 button.classList.remove("stop");
             }
+        }
+
+        async function game(prediction) {
+            while (gameState) {
+                if (prediction === "Go" ) {
+                    currentlocation += 100;
+                    box.style.transform = "translateX(currentlocation)";
+                } else if (prediction === "Nothing") {
+                    currentlocation = -50;
+                    box.style.transform = "translateX(currentlocation)";
+                } else if (prediction === "Stop") {
+                    if (currentlocation == boxlocation) {
+                        gameState = false;
+                        
+                        // display a win message
+                    }
+                }
+            } 
+
+            // put a win message when the while loop ends and the player wins
         }
     </script>
 </body>
