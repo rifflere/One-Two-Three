@@ -101,6 +101,13 @@
             transition: transform 0.05s linear;
             left: 0;
         }
+
+        #message {
+            font-size: 1.4rem;
+            font-weight: bold;
+            min-height: 2rem;
+            margin-bottom: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -108,10 +115,11 @@
     <p><bold>Instructions</bold></p>
     <p>1. Click "Start Camera" and allow access to your webcam.</p>
     <p>2. Show the <strong>Go</strong> gesture 👉 to move the player right.</p>
-    <p>3. Show the <strong>Nothing</strong> gesture to drift back.</p>
+    <p>3. Do <strong>Nothing</strong> to drift back.</p>
     <p>4. Reach the 📦 and show <strong>Stop</strong> ✋ — hold it for 3 seconds to win!</p>
 
     <button id="toggleButton" onclick="toggleCamera()">Start Camera</button>
+    <button id="restartButton" onclick="restart()" style="display:none; background:#16a34a;">Restart Game</button>
 
     <div id="webcam-container"></div>
     <div id="label-container"></div>
@@ -146,7 +154,7 @@
         const player = {
             location: 0,
             speed: 5,
-            element: document.getElementById("player") // you'll need to add this to HTML
+            element: document.getElementById("player")
         };
 
         let lastGoTime = 0;
@@ -161,7 +169,7 @@
         function setupGame() {
             trackWidth   = trackEl.offsetWidth;
             boxLeft      = trackWidth - 60;   // ~60px from right edge of track
-            MAX_LOCATION = window.innerWidth - 80;   // player's rightmost allowed position
+            MAX_LOCATION = window.innerWidth - player.element.offsetWidth;
             MIN_LOCATION = 0;
 
             boxEl.style.left = boxLeft + "px";
@@ -257,6 +265,7 @@
         }
 
         async function game(prediction) {
+            if (gameWon) return;
 
             // Move player
             if (prediction === "Go") {
@@ -268,12 +277,12 @@
             // Apply position
             player.element.style.transform = `translateY(-50%) translateX(${player.location}px)`;
 
-            const atBox = Math.abs(player.location - boxLocation) <= variation;
+            const atBox = Math.abs(player.location - boxLeft) <= variation;
 
             if (atBox) {
                 boxEl.classList.add("in-range");
 
-                if (className === "Stop" && probability > 0.6) {
+                if (prediction === "Stop") {
                     // Start or continue the hold timer
                     if (lastGoTime === 0) lastGoTime = Date.now();
 
@@ -291,7 +300,11 @@
                         boxEl.classList.add("winning");
                         messageEl.textContent = "You win! 🎉";
                         gameWon = true;
-                        isRunning = false;
+
+                       webcam.stop();
+                       isRunning = false;
+                       document.getElementById("toggleButton").style.display = "none";
+                       document.getElementById("restartButton").style.display = "inline-block";
                     } else {
                         messageEl.textContent = `Hold it! ${secondsLeft}s...`;
                     }
@@ -312,6 +325,25 @@
                 lastGoTime = 0;
                 messageEl.textContent = "";
             }
+        }
+
+        function resetGame() {
+            player.location = 0;
+            lastGoTime = 0;
+            player.element.style.transform = `translateY(-50%) translateX(0px)`;
+            boxEl.classList.remove("in-range", "winning");
+            timerBarContainer.style.display = "none";
+            timerBar.style.width = "0%";
+            timerBar.classList.remove("winning");
+            messageEl.textContent = "";
+            document.body.style.backgroundColor = "";
+            document.getElementById("restartButton").style.display = "none";
+            gameWon = false;
+        }
+
+        function restart() {
+            resetGame();
+            init();
         }
     </script>
 </body>
