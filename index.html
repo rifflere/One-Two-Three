@@ -50,6 +50,7 @@
     <div id="label-container"></div>
 
     <div id="message"></div>
+    <div id="player">🚶‍➡</div>
     <div id="box"`>📦</div>
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
@@ -69,9 +70,13 @@
         const MAX_LOCATION = (window.innerWidth/2) - 25; // max location of the box to win (half the screen minus the box width)
         const MIN_LOCATION = 0;
         const boxLocation = window.innerWidth - (window.innerWidth/10); // location of the box to win
+        const player = {
+            location: 0,
+            speed: 5,
+            element: document.getElementById("player") // you'll need to add this to HTML
+        };
         const variation = 20; // how much the box can vary from the exact location to win
         let lastGoTime = 0;
-        let currentlocation = 0;
         let gameState = true;
 
         const box = document.getElementById("box");
@@ -144,14 +149,14 @@
             }
 
             // Change message based on the top prediction
-            const messageEl = document.getElementById("message");
-            if (topClass.className === "Go" && topClass.probability > 0.35) {
-                messageEl.textContent = "🚶‍➡";
-            } else if (topClass.className === "Stop" && topClass.probability > 0.6) {
-                messageEl.textContent = "🛑";
-            } else {
-                messageEl.textContent = "";
-            }
+            // const messageEl = document.getElementById("message");
+            // if (topClass.className === "Go" && topClass.probability > 0.35) {
+            //     messageEl.textContent = "🚶‍➡";
+            // } else if (topClass.className === "Stop" && topClass.probability > 0.6) {
+            //     messageEl.textContent = "🛑";
+            // } else {
+            //     messageEl.textContent = "";
+            // }
 
             // // Move element
             // const box = document.getElementById("box");
@@ -160,6 +165,10 @@
             // } else {
             //     box.style.transform = "translateX(0)";
             // }
+            
+            if (gameState) {
+                game(topClass.className);
+            }
         }
 
         async function toggleCamera() {
@@ -178,23 +187,20 @@
         }
 
         async function game(prediction) {
-            while (gameState) {
-                if (prediction === "Go" ) {
-                    currentlocation += 100;
-                    box.style.transform = "translateX(currentlocation)";
-                } else if (prediction === "Nothing") {
-                    currentlocation -= 50;
-                    box.style.transform = "translateX(currentlocation)";
-                } else if (prediction === "Stop") {
-                    if (currentlocation == boxlocation) {
-                        gameState = false;
-                        // display a win message
-                        messageEl.textContent = "You win! 🎉";
-                    }
+            if (prediction === "Go" ) {
+                player.location += player.location < MAX_LOCATION ? player.speed : 0; // only move forward if not at the right edge
+                player.element.style.transform = "translateX(" + player.location + "px)";
+            } else if (prediction === "Nothing") {
+                player.location -= player.location > MIN_LOCATION ? player.speed : 0; // only move back if not at the left edge
+                player.element.style.transform = "translateX(" + player.location + "px)";
+            } else if (prediction === "Stop") {
+                if (player.location == boxlocation) {
+                    gameState = false;
+                    // display a win message
+                    const messageEl = document.getElementById("message");
+                    messageEl.textContent = "You win! 🎉";
                 }
-            } 
-
-            // put a win message when the while loop ends and the player wins
+            }
         }
     </script>
 </body>
