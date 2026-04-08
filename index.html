@@ -66,9 +66,9 @@
 
         const requiredTime = 3000; //required time to hold the gesture in ms
 
-        const MAX_LOCATION = (window.innerWidth/2) - 50; // max location of the box to win (half the screen minus the box width)
+        const MAX_LOCATION = (window.innerWidth/2) - 25; // max location of the box to win (half the screen minus the box width)
         const MIN_LOCATION = 0;
-        const boxLocation = MAX_LOCATION - 20; // location of the box to win
+        const boxLocation = window.innerWidth - (window.innerWidth/10); // location of the box to win
         const variation = 20; // how much the box can vary from the exact location to win
         let lastGoTime = 0;
         let currentlocation = 0;
@@ -77,7 +77,7 @@
         const box = document.getElementById("box");
         // box.textContent = window.innerWidth;
         box.style.position = "absolute";
-        box.style.left = boxLocation;
+        box.style.left = boxLocation + "px";
         
         async function init() {
             model = await tmImage.load(URL + "model.json", URL + "metadata.json");
