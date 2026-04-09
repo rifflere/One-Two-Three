@@ -167,11 +167,12 @@
         const timerBar    = document.getElementById("timer-bar");
         const messageEl   = document.getElementById("message");
         const trackEl     = document.getElementById("game-track");
+        const trackOffsetLeft = trackEl.getBoundingClientRect().left;
 
         function setupGame() {
             trackWidth   = trackEl.offsetWidth;
             boxLeft      = trackWidth - 60;   // ~60px from right edge of track
-            MAX_LOCATION = window.innerWidth - player.element.offsetWidth;
+            MAX_LOCATION = window.innerWidth - trackOffsetLeft - player.element.offsetWidth;
             MIN_LOCATION = 0;
 
             boxEl.style.left = boxLeft + "px";
@@ -271,7 +272,7 @@
 
             // Move player
             if (prediction === "Go") {
-                player.location = Math.min(player.location + player.speed, MAX_LOCATION);
+                player.location = Math.min(player.location + player.speed, MAX_LOCATION - 200);
             } else if (prediction === "Nothing") {
                 player.location = Math.max(player.location - 2, MIN_LOCATION);
             }
